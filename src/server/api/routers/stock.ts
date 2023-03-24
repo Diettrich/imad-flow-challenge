@@ -4,4 +4,5 @@ export const stockRouter = createTRPCRouter({
   getStocks: publicProcedure.query(async ({ ctx }) =>
     ctx.prisma.stock.findMany()
   ),
+  getMonthlyAverageStockPrice: publicProcedure.query(() => null),
 });
