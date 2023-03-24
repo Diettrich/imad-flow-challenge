@@ -1,4 +1,4 @@
-import { prisma } from "../src/server/db";
+import prisma from "../src/server/db";
 import AmazonData from "../amazon.json";
 import GoogleData from "../google.json";
 
