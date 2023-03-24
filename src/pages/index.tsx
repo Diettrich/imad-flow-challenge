@@ -1,7 +1,9 @@
 import { type NextPage } from "next";
 import Head from "next/head";
+import { api } from "~/utils/api";
 
 const Home: NextPage = () => {
+  const stocks = api.stock.getStocks.useQuery();
   return (
     <>
       <Head>
@@ -11,6 +13,7 @@ const Home: NextPage = () => {
       </Head>
       <main>
         <h1>Flow App</h1>
+        <pre>{JSON.stringify(stocks.data, null, 1)}</pre>
       </main>
     </>
   );
