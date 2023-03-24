@@ -5,7 +5,7 @@ import type { PrismaClient, Stock } from "@prisma/client";
 import { mockDeep } from "vitest-mock-extended";
 
 describe("stock router", () => {
-  test("getStocks procedure", async () => {
+  test("getStocks returns array of stocks", async () => {
     const prisma = mockDeep<PrismaClient>();
     const mockOutput: Stock[] = [
       {
