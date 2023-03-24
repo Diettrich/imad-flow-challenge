@@ -1,19 +1,36 @@
 import { appRouter } from "~/server/api/root";
-import { expect, test } from "vitest";
+import { describe, expect, test } from "vitest";
 import { createInnerTRPCContext } from "../trpc";
+import type { PrismaClient, Stock } from "@prisma/client";
+import { mockDeep } from "vitest-mock-extended";
 
-test("stock router", async () => {
-  const ctx = createInnerTRPCContext({});
-  const caller = appRouter.createCaller(ctx);
+describe("stock router", () => {
+  test("getStocks returns array of stocks", async () => {
+    const prisma = mockDeep<PrismaClient>();
+    const mockOutput: Stock[] = [
+      {
+        id: "1",
+        name: "Amazon",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: "1",
+        name: "Google",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ];
 
-  const stocks = await caller.stock.getStocks();
+    prisma.stock.findMany.mockResolvedValue(mockOutput);
 
-  expect(stocks).toMatchObject([
-    {
-      name: "Amazon",
-    },
-    {
-      name: "Google",
-    },
-  ]);
+    const ctx = createInnerTRPCContext({ prisma });
+
+    const caller = appRouter.createCaller(ctx);
+
+    const response = await caller.stock.getStocks();
+
+    expect(response).toHaveLength(mockOutput.length);
+    expect(response).toStrictEqual(mockOutput);
+  });
 });

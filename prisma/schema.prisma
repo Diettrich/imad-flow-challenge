@@ -6,8 +6,9 @@ generator client {
 }
 
 datasource db {
-    provider = "sqlite"
-    url      = env("DATABASE_URL")
+    provider     = "mysql"
+    url          = env("DATABASE_URL")
+    relationMode = "prisma"
 }
 
 model Stock {
@@ -27,4 +28,6 @@ model DailyPriceRecord {
     timestamp            Float
     stock                Stock    @relation(fields: [stockId], references: [id])
     stockId              String
+
+    @@index([stockId])
 }
