@@ -48,4 +48,10 @@ export const stockRouter = createTRPCRouter({
           bestPrices.buy.price * amountOfShares,
       };
     }),
+
+  getDailyTransactionsForMaxProfit: publicProcedure
+    .input(z.object({ stockId: z.string(), cash: z.number() }))
+    .query(() => {
+      return null;
+    }),
 });
