@@ -35,3 +35,52 @@ export function getAveragePricePerMonth(stockPrices: DailyPriceRecord[]): {
 
   return result;
 }
+
+export function getBestTimeToBuyAndSellByStockForMaxProfit(
+  stockPrices: DailyPriceRecord[]
+) {
+  const result = {
+    buy: {
+      date: 0,
+      price: 0,
+    },
+    sell: {
+      date: 0,
+      price: 0,
+    },
+  };
+
+  if (!stockPrices.length) {
+    return result;
+  }
+
+  const state = {
+    maxProfit: 0,
+  };
+
+  //TODO: Optimize, remove nested loops - O(n^2) -> O(n)
+
+  for (let i = 0; i < stockPrices.length; i++) {
+    const parentRecord = stockPrices[i];
+    for (let j = i; j < stockPrices.length; j++) {
+      const childRecord = stockPrices[j];
+      if (parentRecord && childRecord) {
+        if (
+          parentRecord.lowestPriceOfTheDay < childRecord.highestPriceOfTheDay
+        ) {
+          const profit =
+            childRecord.highestPriceOfTheDay - parentRecord.lowestPriceOfTheDay;
+          if (profit > state.maxProfit) {
+            state.maxProfit = profit;
+            result.buy.price = parentRecord.lowestPriceOfTheDay;
+            result.buy.date = parentRecord.timestamp;
+            result.sell.price = childRecord.highestPriceOfTheDay;
+            result.sell.date = childRecord.timestamp;
+          }
+        }
+      }
+    }
+  }
+
+  return result;
+}
