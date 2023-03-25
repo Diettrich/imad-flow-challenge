@@ -16,4 +16,9 @@ export const stockRouter = createTRPCRouter({
       });
       return getAveragePricePerMonth(dailyPriceRecords);
     }),
+  getBestTimeToBuyAndSellForMaxProfit: publicProcedure
+    .input(z.object({ stockId: z.string(), cash: z.number() }))
+    .query(() => {
+      return null;
+    }),
 });
