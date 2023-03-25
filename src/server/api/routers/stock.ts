@@ -3,6 +3,7 @@ import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import {
   getAveragePricePerMonth,
   getBestTimeToBuyAndSellByStockForMaxProfit,
+  getDailyTransactions,
 } from "./stock.helpers";
 
 export const stockRouter = createTRPCRouter({
@@ -51,7 +52,12 @@ export const stockRouter = createTRPCRouter({
 
   getDailyTransactionsForMaxProfit: publicProcedure
     .input(z.object({ stockId: z.string(), cash: z.number() }))
-    .query(() => {
-      return null;
+    .query(async ({ ctx, input }) => {
+      const dailyPriceRecords = await ctx.prisma.dailyPriceRecord.findMany({
+        where: {
+          stockId: input.stockId,
+        },
+      });
+      return getDailyTransactions(dailyPriceRecords, input.cash);
     }),
 });

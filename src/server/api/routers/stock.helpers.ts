@@ -84,3 +84,200 @@ export function getBestTimeToBuyAndSellByStockForMaxProfit(
 
   return result;
 }
+
+enum TransactionType {
+  Buy = "BUY",
+  Sell = "SELL",
+  Hold = "HOLD",
+}
+
+interface Transaction {
+  date: number;
+  type: TransactionType;
+  stockId: string;
+  quantity: number;
+  total: number;
+  price: number;
+  cash: number;
+  portfolio: { [key: string]: number };
+}
+
+const buyStock = ({
+  stockId,
+  timestamp,
+  buyPrice,
+  cash,
+  portfolio,
+}: {
+  stockId: string;
+  timestamp: number;
+  buyPrice: number;
+  cash: number;
+  portfolio: { [key: string]: number };
+}) => {
+  const quantity = Math.floor(cash / buyPrice);
+  const totalCost = quantity * buyPrice;
+  const newCash = cash - totalCost;
+  const existingQuantity = portfolio[stockId] || 0;
+  const newPortfolio = {
+    ...portfolio,
+    [stockId]: existingQuantity + quantity,
+  };
+  return {
+    cash: newCash,
+    portfolio: newPortfolio,
+    transaction: {
+      date: timestamp,
+      stockId,
+      price: buyPrice,
+      total: quantity * buyPrice,
+      type: TransactionType.Buy,
+      quantity,
+      cash: newCash,
+      portfolio: newPortfolio,
+    },
+  };
+};
+
+const sellStock = ({
+  stockId,
+  timestamp,
+  sellPrice,
+  cash,
+  portfolio,
+}: {
+  stockId: string;
+  timestamp: number;
+  sellPrice: number;
+  cash: number;
+  portfolio: { [key: string]: number };
+}) => {
+  const ownedQuantity = portfolio[stockId] || 0;
+  const totalProfit = ownedQuantity * sellPrice;
+  const newPortfolio = {
+    ...portfolio,
+    [stockId]: 0,
+  };
+  const newCash = cash + totalProfit;
+
+  return {
+    cash: newCash,
+    portfolio: newPortfolio,
+    transaction: {
+      date: timestamp,
+      stockId,
+      price: sellPrice,
+      total: totalProfit,
+      type: TransactionType.Sell,
+      quantity: ownedQuantity,
+      cash: newCash,
+      portfolio: newPortfolio,
+    },
+  };
+};
+
+export function getDailyTransactions(
+  stockPrices: DailyPriceRecord[],
+  initialCash: number
+) {
+  const state: {
+    cash: number;
+    transactions: Transaction[];
+    portfolio: { [key: string]: number };
+  } = {
+    cash: initialCash,
+    transactions: [],
+    portfolio: {},
+  };
+  for (let i = 0; i < stockPrices.length; i++) {
+    const record = stockPrices[i];
+    const previousRecord = stockPrices[i - 1];
+    const nextRecord = stockPrices[i + 1];
+    if (record) {
+      if (nextRecord) {
+        if (record.lowestPriceOfTheDay < nextRecord.highestPriceOfTheDay) {
+          if (state.cash > record.lowestPriceOfTheDay) {
+            const { cash, portfolio, transaction } = buyStock({
+              stockId: record.stockId,
+              timestamp: record.timestamp,
+              buyPrice: record.lowestPriceOfTheDay,
+              cash: state.cash,
+              portfolio: state.portfolio,
+            });
+            state.cash = cash;
+            state.portfolio = portfolio;
+            state.transactions.push(transaction);
+          } else {
+            if (
+              previousRecord &&
+              previousRecord.lowestPriceOfTheDay < record.highestPriceOfTheDay
+            ) {
+              const ownedQuantity = state.portfolio[record.stockId];
+              if (ownedQuantity) {
+                const { cash, portfolio, transaction } = sellStock({
+                  stockId: record.stockId,
+                  timestamp: record.timestamp,
+                  sellPrice: record.highestPriceOfTheDay,
+                  cash: state.cash,
+                  portfolio: state.portfolio,
+                });
+                state.cash = cash;
+                state.portfolio = portfolio;
+                state.transactions.push(transaction);
+              } else {
+                state.transactions.push({
+                  date: record.timestamp,
+                  stockId: record.stockId,
+                  price: record.highestPriceOfTheDay,
+                  total: 0,
+                  type: TransactionType.Hold,
+                  quantity: 0,
+                  cash: state.cash,
+                  portfolio: state.portfolio,
+                });
+              }
+            } else {
+              state.transactions.push({
+                date: record.timestamp,
+                stockId: record.stockId,
+                price: record.highestPriceOfTheDay,
+                total: 0,
+                type: TransactionType.Hold,
+                quantity: 0,
+                cash: state.cash,
+                portfolio: state.portfolio,
+              });
+            }
+          }
+        }
+      } else {
+        const ownedQuantity = state.portfolio[record.stockId];
+        if (ownedQuantity) {
+          const { cash, portfolio, transaction } = sellStock({
+            stockId: record.stockId,
+            timestamp: record.timestamp,
+            sellPrice: record.highestPriceOfTheDay,
+            cash: state.cash,
+            portfolio: state.portfolio,
+          });
+          state.cash = cash;
+          state.portfolio = portfolio;
+          state.transactions.push(transaction);
+        } else {
+          state.transactions.push({
+            date: record.timestamp,
+            stockId: record.stockId,
+            price: record.highestPriceOfTheDay,
+            total: 0,
+            type: TransactionType.Hold,
+            quantity: 0,
+            cash: state.cash,
+            portfolio: state.portfolio,
+          });
+        }
+      }
+    }
+  }
+
+  return { transactions: state.transactions, cash: state.cash };
+}
