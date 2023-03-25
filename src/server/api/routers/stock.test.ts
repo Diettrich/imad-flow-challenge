@@ -82,4 +82,48 @@ describe("stock router", () => {
 
     expect(response).toMatchObject(mockOutput);
   });
+  test("getBestTimeToBuyAndSellByStockForAGivenYear returns best time to buy and to sell to get the highest profit possible", async () => {
+    const prisma = mockDeep<PrismaClient>();
+
+    type Input = inferProcedureInput<
+      AppRouter["stock"]["getBestTimeToBuyAndSellForMaxProfit"]
+    >;
+
+    const input: Input = {
+      stockId: "1",
+      cash: 10000,
+    };
+
+    const mockDailyPriceRecords = AmazonData.map((record) => ({
+      id: "1",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      highestPriceOfTheDay: record.highestPriceOfTheDay,
+      lowestPriceOfTheDay: record.lowestPriceOfTheDay,
+      timestamp: record.timestamp,
+      stockId: "1",
+    }));
+
+    const mockOutput = {
+      buy: {
+        date: 1653364800000,
+        price: 101.26,
+      },
+      sell: {
+        date: 1660622400000,
+        price: 146.57,
+      },
+      profit: 4474.61979063796,
+    };
+
+    prisma.dailyPriceRecord.findMany.mockResolvedValue(mockDailyPriceRecords);
+
+    const ctx = createInnerTRPCContext({ prisma });
+
+    const caller = appRouter.createCaller(ctx);
+
+    const response = await caller.stock.getBestTimeToBuyAndSellForMaxProfit(input);
+
+    expect(response).toMatchObject(mockOutput);
+  });
 });
