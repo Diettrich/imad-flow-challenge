@@ -24,12 +24,16 @@ const Layout: FunctionComponent<Props> = ({ children }) => {
               href: "/",
             },
             {
+              label: "Chart",
+              href: "/chart",
+            },
+            {
               label: "About",
               href: "/about",
             },
           ]}
         />
-        <main className="mt-16">{children}</main>
+        <main className="mt-32 sm:mt-16">{children}</main>
         <Footer />
       </div>
     </>
