@@ -10,14 +10,38 @@ const LineChart = dynamic(() => import("../components/LineChart"), {
   ssr: false,
 });
 
+const formatPrice = (price: number) =>
+  price.toLocaleString("fr-FR", {
+    style: "currency",
+    currency: "EUR",
+  });
+
+const formatDate = (timestamp: number) =>
+  new Date(timestamp).toLocaleDateString("fr-FR");
+
+const CASH = 100000;
+
 const Chart: NextPage = () => {
+  const stocks = api.stock.getStocks.useQuery();
   const amazonMonthlyAverageStockPrice =
     api.stock.getMonthlyAverageStockPrice.useQuery({
-      stockId: "clfmtwpk50000se7atjmy6avq",
+      stockId: stocks.data?.find((stock) => stock.name === "Amazon")?.id || "",
     });
   const googleMonthlyAverageStockPrice =
     api.stock.getMonthlyAverageStockPrice.useQuery({
-      stockId: "clfmtwqib0002se7achr4xfgc",
+      stockId: stocks.data?.find((stock) => stock.name === "Google")?.id || "",
+    });
+
+  const bestTimeToBuyAndSellAmazonStock =
+    api.stock.getBestTimeToBuyAndSellForMaxProfit.useQuery({
+      stockId: stocks.data?.find((stock) => stock.name === "Amazon")?.id || "",
+      cash: CASH,
+    });
+
+  const bestTimeToBuyAndSellGoogleStock =
+    api.stock.getBestTimeToBuyAndSellForMaxProfit.useQuery({
+      stockId: stocks.data?.find((stock) => stock.name === "Google")?.id || "",
+      cash: CASH,
     });
 
   return (
@@ -33,6 +57,38 @@ const Chart: NextPage = () => {
               }}
             />
           )}
+      </Container>
+      <Container className="mb-10">
+        {bestTimeToBuyAndSellAmazonStock.data && (
+          <p className="mb-10">
+            Aymen devrait acheter {formatPrice(CASH)} d{"'"}action Amazon le{" "}
+            {formatDate(bestTimeToBuyAndSellAmazonStock.data.buy.date)} au prix
+            de {formatPrice(bestTimeToBuyAndSellAmazonStock.data.buy.price)}
+            <p>
+              Il devrait ensuite vendre ces actions le{" "}
+              {formatDate(bestTimeToBuyAndSellAmazonStock.data.sell.date)} au
+              prix de{" "}
+              {formatPrice(bestTimeToBuyAndSellAmazonStock.data.sell.price)}{" "}
+              pour faire un gain de{" "}
+              {formatPrice(bestTimeToBuyAndSellAmazonStock.data.profit)}
+            </p>
+          </p>
+        )}
+        {bestTimeToBuyAndSellGoogleStock.data && (
+          <p>
+            Anouar devrait acheter {formatPrice(CASH)} d{"'"}action Amazon le{" "}
+            {formatDate(bestTimeToBuyAndSellGoogleStock.data.buy.date)} au prix
+            de {formatPrice(bestTimeToBuyAndSellGoogleStock.data.buy.price)}
+            <p>
+              Il devrait ensuite vendre ces actions le{" "}
+              {formatDate(bestTimeToBuyAndSellGoogleStock.data.sell.date)} au
+              prix de{" "}
+              {formatPrice(bestTimeToBuyAndSellGoogleStock.data.sell.price)}{" "}
+              pour faire un gain de{" "}
+              {formatPrice(bestTimeToBuyAndSellGoogleStock.data.profit)}
+            </p>
+          </p>
+        )}
       </Container>
     </Layout>
   );
