@@ -82,7 +82,7 @@ describe("stock router", () => {
 
     expect(response).toMatchObject(mockOutput);
   });
-  test("getBestTimeToBuyAndSellByStockForAGivenYear returns best time to buy and to sell to get the highest profit possible", async () => {
+  test("getBestTimeToBuyAndSellForMaxProfit returns best time to buy and to sell to get the highest profit possible", async () => {
     const prisma = mockDeep<PrismaClient>();
 
     type Input = inferProcedureInput<
@@ -122,7 +122,109 @@ describe("stock router", () => {
 
     const caller = appRouter.createCaller(ctx);
 
-    const response = await caller.stock.getBestTimeToBuyAndSellForMaxProfit(input);
+    const response = await caller.stock.getBestTimeToBuyAndSellForMaxProfit(
+      input
+    );
+
+    expect(response).toMatchObject(mockOutput);
+  });
+  test("getDailyTransactionsForMaxProfit returns daily transactions to get the highest profit possible", async () => {
+    const prisma = mockDeep<PrismaClient>();
+
+    type Input = inferProcedureInput<
+      AppRouter["stock"]["getDailyTransactionsForMaxProfit"]
+    >;
+
+    const input: Input = {
+      stockId: "1",
+      cash: 1000,
+    };
+
+    const mockDailyPriceRecords = AmazonData.slice(0, 5).map((record) => ({
+      id: "1",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      highestPriceOfTheDay: record.highestPriceOfTheDay,
+      lowestPriceOfTheDay: record.lowestPriceOfTheDay,
+      timestamp: record.timestamp,
+      stockId: "1",
+    }));
+
+    const mockOutput = {
+      transactions: [
+        {
+          date: 1641186000000,
+          stockId: "1",
+          price: 166.1605,
+          total: 996.9630000000001,
+          type: "BUY",
+          quantity: 6,
+          cash: 3.036999999999921,
+          portfolio: {
+            "1": 6,
+          },
+        },
+        {
+          date: 1641272400000,
+          stockId: "1",
+          price: 171.4,
+          total: 1028.4,
+          type: "SELL",
+          quantity: 6,
+          cash: 1031.437,
+          portfolio: {
+            "1": 0,
+          },
+        },
+        {
+          date: 1641358800000,
+          stockId: "1",
+          price: 164.357,
+          total: 986.142,
+          type: "BUY",
+          quantity: 6,
+          cash: 45.294999999999845,
+          portfolio: {
+            "1": 6,
+          },
+        },
+        {
+          date: 1641445200000,
+          stockId: "1",
+          price: 164.8,
+          total: 988.8000000000001,
+          type: "SELL",
+          quantity: 6,
+          cash: 1034.0949999999998,
+          portfolio: {
+            "1": 0,
+          },
+        },
+        {
+          date: 1641531600000,
+          stockId: "1",
+          price: 165.2433,
+          total: 0,
+          type: "HOLD",
+          quantity: 0,
+          cash: 1034.0949999999998,
+          portfolio: {
+            "1": 0,
+          },
+        },
+      ],
+      cash: 1034.0949999999998,
+    };
+
+    prisma.dailyPriceRecord.findMany.mockResolvedValue(mockDailyPriceRecords);
+
+    const ctx = createInnerTRPCContext({ prisma });
+
+    const caller = appRouter.createCaller(ctx);
+
+    const response = await caller.stock.getDailyTransactionsForMaxProfit(
+      input
+    );    
 
     expect(response).toMatchObject(mockOutput);
   });
