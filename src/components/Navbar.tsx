@@ -13,9 +13,9 @@ interface Props {
 
 const Navbar: FunctionComponent<Props> = ({ links }) => {
   return (
-    <header className="fixed w-full border-b-[0.5px] bg-white">
-      <Container className="flex items-center">
-        <Link className="mr-6 px-6 py-4 font-bold" href="/">
+    <header className="z-10 fixed w-full border-b-[0.5px] bg-white">
+      <Container className="flex flex-col sm:flex-row py-4 justify-center sm:justify-start items-center">
+        <Link className="text-sm mb-5 lg:text-base sm:mb-0 sm:mr-20 font-bold" href="/">
           Flow Challenge
         </Link>
         <nav>
