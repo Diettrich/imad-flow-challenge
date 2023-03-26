@@ -49,7 +49,6 @@ export const stockRouter = createTRPCRouter({
           bestPrices.buy.price * amountOfShares,
       };
     }),
-
   getDailyTransactionsForMaxProfit: publicProcedure
     .input(z.object({ stockId: z.string(), cash: z.number() }))
     .query(async ({ ctx, input }) => {
@@ -58,6 +57,22 @@ export const stockRouter = createTRPCRouter({
           stockId: input.stockId,
         },
       });
-      return getDailyTransactions(dailyPriceRecords, input.cash);
+      const start = performance.now();
+      const transactions = getDailyTransactions(dailyPriceRecords, input.cash);
+      const end = performance.now();
+
+      const elapsedTime = end - start;
+      const minutes = Math.floor(elapsedTime / 60000);
+      const seconds = ((elapsedTime % 60000) / 1000).toFixed(3);
+
+      return {
+        ...transactions,
+        debug: {
+          executionTime: {
+            minutes: minutes,
+            seconds: seconds,
+          },
+        },
+      };
     }),
 });

@@ -4,45 +4,61 @@ import Layout from "~/components/Layout";
 import { Title } from "~/components/Typography";
 import { api } from "~/utils/api";
 import dynamic from "next/dynamic";
+import { formatDate, formatPrice } from "~/utils/formatting";
 
 const LineChart = dynamic(() => import("../components/LineChart"), {
   loading: () => <p>Loading...</p>,
   ssr: false,
 });
 
-const formatPrice = (price: number) =>
-  price.toLocaleString("fr-FR", {
-    style: "currency",
-    currency: "EUR",
-  });
-
-const formatDate = (timestamp: number) =>
-  new Date(timestamp).toLocaleDateString("fr-FR");
-
 const CASH = 100000;
 
 const Chart: NextPage = () => {
   const stocks = api.stock.getStocks.useQuery();
+
+  const amazonStockId =
+    stocks.data?.find((stock) => stock.name === "Amazon")?.id || "";
+  const googleStockId =
+    stocks.data?.find((stock) => stock.name === "Google")?.id || "";
+
   const amazonMonthlyAverageStockPrice =
     api.stock.getMonthlyAverageStockPrice.useQuery({
-      stockId: stocks.data?.find((stock) => stock.name === "Amazon")?.id || "",
+      stockId: amazonStockId,
     });
+
   const googleMonthlyAverageStockPrice =
     api.stock.getMonthlyAverageStockPrice.useQuery({
-      stockId: stocks.data?.find((stock) => stock.name === "Google")?.id || "",
+      stockId: googleStockId,
     });
 
   const bestTimeToBuyAndSellAmazonStock =
     api.stock.getBestTimeToBuyAndSellForMaxProfit.useQuery({
-      stockId: stocks.data?.find((stock) => stock.name === "Amazon")?.id || "",
+      stockId: amazonStockId,
       cash: CASH,
     });
 
   const bestTimeToBuyAndSellGoogleStock =
     api.stock.getBestTimeToBuyAndSellForMaxProfit.useQuery({
-      stockId: stocks.data?.find((stock) => stock.name === "Google")?.id || "",
+      stockId: googleStockId,
       cash: CASH,
     });
+
+  if (
+    stocks.isError ||
+    amazonMonthlyAverageStockPrice.isError ||
+    googleMonthlyAverageStockPrice.isError ||
+    bestTimeToBuyAndSellAmazonStock.isError ||
+    bestTimeToBuyAndSellGoogleStock.isError
+  ) {
+    return (
+      <Layout>
+        <Container className="mb-10">
+          <Title>Something went wrong</Title>
+          <p>Try refreshing the page</p>
+        </Container>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -76,7 +92,7 @@ const Chart: NextPage = () => {
         )}
         {bestTimeToBuyAndSellGoogleStock.data && (
           <p>
-            Anouar devrait acheter {formatPrice(CASH)} d{"'"}action Amazon le{" "}
+            Anouar devrait acheter {formatPrice(CASH)} d{"'"}action Google le{" "}
             {formatDate(bestTimeToBuyAndSellGoogleStock.data.buy.date)} au prix
             de {formatPrice(bestTimeToBuyAndSellGoogleStock.data.buy.price)}
             <p>

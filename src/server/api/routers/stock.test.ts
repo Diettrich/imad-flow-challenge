@@ -161,7 +161,10 @@ describe("stock router", () => {
           quantity: 6,
           cash: 3.036999999999921,
           portfolio: {
-            "1": 6,
+            "1": {
+              quantity: 6,
+              cost: 996.9630000000001,
+            },
           },
         },
         {
@@ -173,7 +176,10 @@ describe("stock router", () => {
           quantity: 6,
           cash: 1031.437,
           portfolio: {
-            "1": 0,
+            "1": {
+              quantity: 0,
+              cost: 0,
+            },
           },
         },
         {
@@ -185,7 +191,10 @@ describe("stock router", () => {
           quantity: 6,
           cash: 45.294999999999845,
           portfolio: {
-            "1": 6,
+            "1": {
+              quantity: 6,
+              cost: 986.142,
+            },
           },
         },
         {
@@ -197,7 +206,10 @@ describe("stock router", () => {
           quantity: 6,
           cash: 1034.0949999999998,
           portfolio: {
-            "1": 0,
+            "1": {
+              quantity: 0,
+              cost: 0,
+            },
           },
         },
         {
@@ -209,7 +221,10 @@ describe("stock router", () => {
           quantity: 0,
           cash: 1034.0949999999998,
           portfolio: {
-            "1": 0,
+            "1": {
+              quantity: 0,
+              cost: 0,
+            },
           },
         },
       ],
@@ -222,9 +237,7 @@ describe("stock router", () => {
 
     const caller = appRouter.createCaller(ctx);
 
-    const response = await caller.stock.getDailyTransactionsForMaxProfit(
-      input
-    );    
+    const response = await caller.stock.getDailyTransactionsForMaxProfit(input);
 
     expect(response).toMatchObject(mockOutput);
   });
