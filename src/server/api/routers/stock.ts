@@ -45,8 +45,10 @@ export const stockRouter = createTRPCRouter({
           price: bestPrices.sell.price,
         },
         profit:
-          bestPrices.sell.price * amountOfShares -
-          bestPrices.buy.price * amountOfShares,
+          bestPrices.buy.price && bestPrices.buy.price
+            ? bestPrices.sell.price * amountOfShares -
+              bestPrices.buy.price * amountOfShares
+            : 0,
       };
     }),
   getDailyTransactionsForMaxProfit: publicProcedure
