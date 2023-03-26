@@ -20,9 +20,13 @@ export function getAveragePricePerMonth(stockPrices: DailyPriceRecord[]): {
       counts[month] = 0;
     }
 
-    const averagePrice = (highestPriceOfTheDay + lowestPriceOfTheDay) / 2;
-
-    totalPrices[month] += averagePrice;
+    
+    if(highestPriceOfTheDay < lowestPriceOfTheDay) {      
+      totalPrices[month] += 0
+    } else {
+      const averagePrice = (highestPriceOfTheDay + lowestPriceOfTheDay) / 2;
+      totalPrices[month] += averagePrice;
+    }
     counts[month]++;
   }
 
