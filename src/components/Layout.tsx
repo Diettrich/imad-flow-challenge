@@ -28,8 +28,8 @@ const Layout: FunctionComponent<Props> = ({ children }) => {
               href: "/chart",
             },
             {
-              label: "About",
-              href: "/about",
+              label: "Transactions",
+              href: "/transactions",
             },
           ]}
         />

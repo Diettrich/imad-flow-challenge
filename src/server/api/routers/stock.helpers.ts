@@ -99,7 +99,12 @@ interface Transaction {
   total: number;
   price: number;
   cash: number;
-  portfolio: { [key: string]: number };
+  portfolio: {
+    [key: string]: {
+      quantity: number;
+      cost: number;
+    };
+  };
 }
 
 const buyStock = ({
@@ -113,15 +118,23 @@ const buyStock = ({
   timestamp: number;
   buyPrice: number;
   cash: number;
-  portfolio: { [key: string]: number };
+  portfolio: {
+    [key: string]: {
+      quantity: number;
+      cost: number;
+    };
+  };
 }) => {
   const quantity = Math.floor(cash / buyPrice);
   const totalCost = quantity * buyPrice;
   const newCash = cash - totalCost;
-  const existingQuantity = portfolio[stockId] || 0;
+  const existingQuantity = portfolio[stockId]?.quantity || 0;
+  const existingCost = portfolio[stockId]?.cost || 0;
   const newPortfolio = {
-    ...portfolio,
-    [stockId]: existingQuantity + quantity,
+    [stockId]: {
+      quantity: existingQuantity + quantity,
+      cost: existingCost + totalCost,
+    },
   };
   return {
     cash: newCash,
@@ -130,7 +143,7 @@ const buyStock = ({
       date: timestamp,
       stockId,
       price: buyPrice,
-      total: quantity * buyPrice,
+      total: totalCost,
       type: TransactionType.Buy,
       quantity,
       cash: newCash,
@@ -150,13 +163,18 @@ const sellStock = ({
   timestamp: number;
   sellPrice: number;
   cash: number;
-  portfolio: { [key: string]: number };
+  portfolio: {
+    [key: string]: {
+      quantity: number;
+      cost: number;
+    };
+  };
 }) => {
-  const ownedQuantity = portfolio[stockId] || 0;
+  const ownedQuantity = portfolio[stockId]?.quantity || 0;
   const totalProfit = ownedQuantity * sellPrice;
   const newPortfolio = {
     ...portfolio,
-    [stockId]: 0,
+    [stockId]: { quantity: 0, cost: 0 },
   };
   const newCash = cash + totalProfit;
 
@@ -183,11 +201,18 @@ export function getDailyTransactions(
   const state: {
     cash: number;
     transactions: Transaction[];
-    portfolio: { [key: string]: number };
+    portfolio: {
+      [key: string]: {
+        quantity: number;
+        cost: number;
+      };
+    };
+    lastPurchasePrice: number;
   } = {
     cash: initialCash,
     transactions: [],
     portfolio: {},
+    lastPurchasePrice: 0,
   };
   for (let i = 0; i < stockPrices.length; i++) {
     const record = stockPrices[i];
@@ -208,12 +233,13 @@ export function getDailyTransactions(
             state.portfolio = portfolio;
             state.transactions.push(transaction);
           } else {
-            if (
-              previousRecord &&
-              previousRecord.lowestPriceOfTheDay < record.highestPriceOfTheDay
-            ) {
-              const ownedQuantity = state.portfolio[record.stockId];
-              if (ownedQuantity) {
+            if (previousRecord) {
+              const ownedStock = state.portfolio[record.stockId];
+              if (
+                ownedStock &&
+                ownedStock.cost / ownedStock.quantity <
+                  record.highestPriceOfTheDay
+              ) {
                 const { cash, portfolio, transaction } = sellStock({
                   stockId: record.stockId,
                   timestamp: record.timestamp,
@@ -236,22 +262,11 @@ export function getDailyTransactions(
                   portfolio: state.portfolio,
                 });
               }
-            } else {
-              state.transactions.push({
-                date: record.timestamp,
-                stockId: record.stockId,
-                price: record.highestPriceOfTheDay,
-                total: 0,
-                type: TransactionType.Hold,
-                quantity: 0,
-                cash: state.cash,
-                portfolio: state.portfolio,
-              });
             }
           }
         }
       } else {
-        const ownedQuantity = state.portfolio[record.stockId];
+        const ownedQuantity = state.portfolio[record.stockId]?.quantity;
         if (ownedQuantity) {
           const { cash, portfolio, transaction } = sellStock({
             stockId: record.stockId,
