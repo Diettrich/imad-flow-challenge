@@ -24,5 +24,6 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
       - name: coverage
+        run: npm run coverage
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
